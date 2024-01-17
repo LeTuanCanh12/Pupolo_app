@@ -10,7 +10,6 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,16 +20,8 @@ import com.example.pulopo.Retrofit.ApiServer;
 import com.example.pulopo.Retrofit.RetrofitClient;
 import com.example.pulopo.Services.Post_Location_Service;
 import com.example.pulopo.Utils.UserUtil;
-import com.example.pulopo.UtilsCommon;
-import com.example.pulopo.model.Users;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-
-import java.util.ArrayList;
+import com.example.pulopo.Utils.UtilsCommon;
+import com.example.pulopo.model.response.UserResponse;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -40,10 +31,7 @@ public class LoginActivity extends AppCompatActivity {
     Button btnLogin,btnRegister;
     EditText edtmail, edtPass;
 
-    private FirebaseAuth firebaseAuth;
-    FirebaseDatabase database;
-    DatabaseReference myRef;
-    ArrayList<Users> listUser = new ArrayList<>();
+
 
     private static final int request_Code = 12;
     LocationManager locationManager;
@@ -89,11 +77,10 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         init();
-
+        checkInforLogin();
         apiServer = RetrofitClient.getInstance(UtilsCommon.BASE_URL).create(ApiServer.class);
         createRequestPermission();
         notifyTurnOnLocation();
-        insertInforUserLogin();
 
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -118,13 +105,15 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private void insertInforUserLogin() {
-        if(edtmail.getText().toString().isEmpty()){
-            edtmail.setText(UserUtil.emailLogin);
-            edtPass.setText(UserUtil.passwordLogin);
-
+    private void checkInforLogin() {
+        if(TextUtils.isEmpty(edtmail.getText())){
+            edtmail.setText(UserUtil.getUserName());
+            edtPass.setText(UserUtil.getPassword());
+        }else{
+            Toast.makeText(this, "không đọc được util", Toast.LENGTH_SHORT).show();
         }
     }
+
 
     private void notifyTurnOnLocation() {
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -138,50 +127,33 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private void getData() {
-        String emailCheck = edtmail.getText().toString().trim();
-        database = FirebaseDatabase.getInstance();
-        myRef = database.getReference();
-        myRef.child("My Family").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-                for(DataSnapshot snapshot : dataSnapshot.getChildren()){
-                    Users users = snapshot.getValue(Users.class);
-                    listUser.add(users);
-                }
-                for(Users s: listUser){
-                        if(s.getUID().equals(firebaseAuth.getCurrentUser().getUid())){
-                        UserUtil.userName = s.getUserName().toString().trim();
-                        UserUtil.UID = firebaseAuth.getCurrentUser().getUid();
-                    }
-                }
-                listUser.clear();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-    }
 
     private void Login() {
-        if(UserUtil.userName.isEmpty()) {
-            getData();
-        }
+
                 String email_tr, pass_str;
                 email_tr = edtmail.getText().toString().trim();
                 pass_str = edtPass.getText().toString().trim();
                 if(TextUtils.isEmpty(email_tr) && TextUtils.isEmpty(pass_str)){
                     Toast.makeText(this, "Vui lòng nhập email, mật khẩu", Toast.LENGTH_SHORT).show();
                 }else{
-                    compositeDisposable.add(apiServer.login("letuancanh","1234")
+                    compositeDisposable.add(apiServer.login(email_tr,pass_str)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(
                                     userModel -> {
-                                        Log.d("USER",userModel.toString());
+
+                                        UserResponse userResponse = userModel;
+                                        if(userResponse.getSuccess()){
+                                            UserUtil.setEmail(userResponse.getData().getUser().getEmail());
+                                            UserUtil.setUserName(userResponse.getData().getUser().getUserName());
+                                            UserUtil.setHoTen(userResponse.getData().getUser().getHoTen());
+                                            UserUtil.setPassword(userResponse.getData().getUser().getPassword());
+                                            UserUtil.setId((int) userResponse.getData().getUser().getid());
+                                            Intent intent = new Intent(LoginActivity.this,ConnectFriendsActivity.class);
+                                            startActivity(intent);
+                                            Toast.makeText(this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
+                                        }
                                     },
                                     throwable -> {
                                         Toast.makeText(getApplicationContext(),throwable.getMessage(), Toast.LENGTH_LONG).show();
@@ -194,13 +166,9 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
-    private void createdSevices() {
-        Intent intentSer = new Intent(this, Post_Location_Service.class);
-        startService(intentSer);
-    }
+
 
     public void init(){
-        firebaseAuth = FirebaseAuth.getInstance();
         btnLogin = findViewById(R.id.btnLogin);
         btnRegister = findViewById(R.id.btnRegister);
         edtmail = findViewById(R.id.edtMail);

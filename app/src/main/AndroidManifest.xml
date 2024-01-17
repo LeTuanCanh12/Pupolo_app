@@ -9,15 +9,17 @@
 
     <application
         android:allowBackup="true"
-        android:usesCleartextTraffic="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/icon_app"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.Pulopo"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
-
+        <activity
+            android:name=".Activity.ConnectFriendsActivity"
+            android:exported="false" />
 
         <service
             android:name=".Services.Post_Location_Service"
@@ -27,6 +29,7 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAbKavdP_-2ZBSHnQXtlLIZmI3v-fQPSOQ" />
+
         <activity
             android:name=".Activity.MapsActivity"
             android:exported="false" />

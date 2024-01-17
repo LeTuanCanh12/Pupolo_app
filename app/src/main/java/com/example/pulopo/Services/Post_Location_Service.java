@@ -13,12 +13,6 @@ import android.os.IBinder;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 
-
-import com.example.pulopo.Utils.UserUtil;
-import com.example.pulopo.model.Users;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
 public class Post_Location_Service extends Service {
     Handler mHandler = new Handler();
     private LocationManager locationManager;
@@ -41,12 +35,12 @@ public class Post_Location_Service extends Service {
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                getLocationCurrent();
-                FirebaseDatabase database = FirebaseDatabase.getInstance();
-                DatabaseReference myRef = database.getReference("My Family");
-                Users users = new Users(UserUtil.UID.toString().trim(),UserUtil.userName.toString().trim(),myLatLocation,myLongLocation);
-                myRef.child(users.getUID()).setValue(users);
-                mHandler.postDelayed(this, 1000);
+//                getLocationCurrent();
+//                FirebaseDatabase database = FirebaseDatabase.getInstance();
+//                DatabaseReference myRef = database.getReference("My Family");
+//                Users users = new Users(UserUtil.UID.toString().trim(),UserUtil.userName.toString().trim(),myLatLocation,myLongLocation);
+//                myRef.child(users.getUID()).setValue(users);
+//                mHandler.postDelayed(this, 1000);
             }
         }, 1000);
         return START_NOT_STICKY;

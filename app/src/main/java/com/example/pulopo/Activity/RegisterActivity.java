@@ -3,11 +3,9 @@ package com.example.pulopo.Activity;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,18 +14,24 @@ import android.widget.Toast;
 import com.example.pulopo.R;
 
 
+import com.example.pulopo.Retrofit.ApiServer;
+import com.example.pulopo.Retrofit.RetrofitClient;
 import com.example.pulopo.Utils.UserUtil;
-import com.google.firebase.auth.FirebaseAuth;
+import com.example.pulopo.Utils.UtilsCommon;
+import com.example.pulopo.model.response.RegisterReponse;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 
 public class RegisterActivity extends AppCompatActivity {
-    EditText textPersonName, textEmailAddress, textPassword, textPasswordConfirm;
+    EditText textPersonName, textEmailAddress, textHoVaTen, textPasswordConfirm;
     Button btnRegister,btnBack;
 
-    FirebaseAuth firebaseAuth;
+    CompositeDisposable compositeDisposable = new CompositeDisposable();
+
+    ApiServer apiServer;
 
 
     @Override
@@ -35,6 +39,7 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
         initView();
+        apiServer = RetrofitClient.getInstance(UtilsCommon.BASE_URL).create(ApiServer.class);
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -51,80 +56,48 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void creatAccountUser() {
-        String email_str,perSonUser_str,pass_str,passConfirm_str;
-
+        String email_str,perSonUser_str,hoVaTen,passConfirm_str;
         email_str = textEmailAddress.getText().toString().trim();
         perSonUser_str = textPersonName.getText().toString().trim();
-        pass_str = textPassword.getText().toString().trim();
+        hoVaTen = textHoVaTen.getText().toString().trim();
         passConfirm_str = textPasswordConfirm.getText().toString().trim();
         if(TextUtils.isEmpty(email_str) || TextUtils.isEmpty(perSonUser_str)
-          || TextUtils.isEmpty(pass_str) || TextUtils.isEmpty(passConfirm_str)){
+          || TextUtils.isEmpty(hoVaTen) || TextUtils.isEmpty(passConfirm_str)){
             Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
         }else{
-            if(pass_str.equals(passConfirm_str)){
-                callAPICreate();
-            }else{
-                Toast.makeText(this, "Xác minh mật khẩu chưa chính xác", Toast.LENGTH_SHORT).show();
-            }
+                System.out.println(email_str+perSonUser_str+hoVaTen+passConfirm_str);
+                compositeDisposable.add(apiServer.register(perSonUser_str,passConfirm_str,hoVaTen,email_str)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                userModel -> {
+                                    RegisterReponse registerReponse = userModel;
+                                    if(registerReponse.getSuccess()){
+                                        UserUtil.setUserName(perSonUser_str);
+                                        UserUtil.setPassword(passConfirm_str);
+                                        Intent intent = new Intent(RegisterActivity.this,LoginActivity.class);
+                                        startActivity(intent);
+                                        Toast.makeText(this, "Đăng ký tài khoản thành công", Toast.LENGTH_SHORT).show();
+                                    }
+                                },
+                                throwable -> {
+                                    Toast.makeText(getApplicationContext(),throwable.getMessage(), Toast.LENGTH_LONG).show();
+                                }
+                        ));
+
+
+
         }
 
 
 
     }
-
-    private void callAPICreate() {
-        new NetworkTask().execute();
-    }
-
-    private class NetworkTask extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-            // Thực hiện các tác vụ mạng ở đây
-            try {
-                // Tạo URL của API
-                URL url = new URL("https://localhost:5001/api/User/Register?UserName=dvthongTest&Password=dvthong&HoTen=dvthong&Email=dvthong");
-
-                // Tạo kết nối HTTP
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.connect();
-
-                Log.e("check",connection.toString());
-
-                // Đóng kết nối
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-    }
-
-// Gọi AsyncTask
-
-        private void writeUtilsUserName() {
-        String email_login = textEmailAddress.getText().toString().trim();
-        String pass_login = textPassword.getText().toString().trim();
-        String userNamePerson  = textPersonName.getText().toString().trim();
-        String userID  = firebaseAuth.getCurrentUser().getUid();
-        UserUtil.emailLogin = email_login;
-        UserUtil.passwordLogin = pass_login;
-        UserUtil.userName = userNamePerson;
-        UserUtil.UID = userID;
-
-
-
-    }
-    
-
-
     private void initView() {
         textEmailAddress = findViewById(R.id.editTextTextEmailAddress);
         textPersonName = findViewById(R.id.editTextPersonName);
-        textPassword = findViewById(R.id.editTextTextPassword);
+        textHoVaTen = findViewById(R.id.editHoVaTen);
         textPasswordConfirm= findViewById(R.id.editTextTextPasswordConfirm);
         btnRegister = findViewById(R.id.btnRegister);
         btnBack = findViewById(R.id.btnBackToLogin);
-        firebaseAuth = FirebaseAuth.getInstance();
     }
 }

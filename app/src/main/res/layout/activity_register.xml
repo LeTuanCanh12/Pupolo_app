@@ -41,22 +41,22 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="103dp"
         android:ems="10"
-        android:hint="Nhập tên người dùng"
+        android:hint="Nhập user name"
         android:inputType="textPersonName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextTextEmailAddress" />
 
     <EditText
-        android:id="@+id/editTextTextPassword"
+        android:id="@+id/editHoVaTen"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="98dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="103dp"
         android:ems="10"
-        android:hint="Mật khẩu 6 ký tự"
-        android:inputType="textPassword"
+        android:hint="Họ tên"
+        android:inputType="textPersonName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextPersonName" />
@@ -69,27 +69,28 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="103dp"
         android:ems="10"
-        android:hint="Xác nhận lại mật khẩu"
+        android:hint="Nhập mật khẩu"
         android:inputType="textPassword"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTextPassword" />
-
-    <Button
-        android:id="@+id/btnRegister"
-        style="@style/btn"
-        android:layout_marginStart="78dp"
-        android:layout_marginTop="21dp"
-        android:text="register"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTextPasswordConfirm" />
+        app:layout_constraintTop_toBottomOf="@+id/editHoVaTen" />
 
     <Button
         android:id="@+id/btnBackToLogin"
         style="@style/btn"
+        android:text="Back"
+        android:layout_marginStart="78dp"
+        android:layout_marginTop="21dp"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextTextPasswordConfirm" />
+    <Button
+
+        android:id="@+id/btnRegister"
+        style="@style/btn"
+        android:text="register"
         android:layout_marginTop="21dp"
         android:layout_marginEnd="78dp"
-        android:text="Back"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextTextPasswordConfirm" />
 </androidx.constraintlayout.widget.ConstraintLayout>
