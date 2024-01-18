@@ -10,15 +10,14 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.pulopo.Activity.ChatActivity;
 import com.example.pulopo.R;
+import com.example.pulopo.interfaceClick.ItemClickListener;
 import com.example.pulopo.model.User;
 
 import java.util.List;
 
-import vn.manager.appbanhang.Interface.ItemClickListener;
-import vn.manager.appbanhang.activity.ChatActivity;
-import vn.manager.appbanhang.model.User;
-import vn.name.appbanhang.R;
+
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.MyViewHolder> {
     Context context;
@@ -41,7 +40,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.MyViewHolder> 
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
         User user=userList.get(position);
-        holder.txtId.setText(user.getId()+ " ");
+//      holder.txtId.setText(user.getId()+ " ");
         holder.txtUser.setText(user.getUsername());
         holder.setItemClickListener(new ItemClickListener() {
             @Override
@@ -49,6 +48,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.MyViewHolder> 
                 if(!isLongClick){
                     Intent intent=new Intent(context, ChatActivity.class);
                     intent.putExtra("id",user.getId());
+                    intent.putExtra("username",user.getUsername());
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     context.startActivity(intent);
                 }
@@ -68,7 +68,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.MyViewHolder> 
 
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
-            txtId = itemView.findViewById(R.id.iduser);
+
             txtUser = itemView.findViewById(R.id.username);
             itemView.setOnClickListener(this);
         }

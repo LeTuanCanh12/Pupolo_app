@@ -10,6 +10,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,6 +18,7 @@ import android.widget.Toast;
 
 import com.example.pulopo.R;
 import com.example.pulopo.Retrofit.ApiServer;
+import com.example.pulopo.Retrofit.LoginRequest;
 import com.example.pulopo.Retrofit.RetrofitClient;
 import com.example.pulopo.Services.Post_Location_Service;
 import com.example.pulopo.Utils.UserUtil;
@@ -77,7 +79,6 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         init();
-        checkInforLogin();
         apiServer = RetrofitClient.getInstance(UtilsCommon.BASE_URL).create(ApiServer.class);
         createRequestPermission();
         notifyTurnOnLocation();
@@ -105,14 +106,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private void checkInforLogin() {
-        if(TextUtils.isEmpty(edtmail.getText())){
-            edtmail.setText(UserUtil.getUserName());
-            edtPass.setText(UserUtil.getPassword());
-        }else{
-            Toast.makeText(this, "không đọc được util", Toast.LENGTH_SHORT).show();
-        }
-    }
+
 
 
     private void notifyTurnOnLocation() {
@@ -134,10 +128,11 @@ public class LoginActivity extends AppCompatActivity {
                 String email_tr, pass_str;
                 email_tr = edtmail.getText().toString().trim();
                 pass_str = edtPass.getText().toString().trim();
+                 LoginRequest loginRequest = new LoginRequest(email_tr,pass_str);
                 if(TextUtils.isEmpty(email_tr) && TextUtils.isEmpty(pass_str)){
                     Toast.makeText(this, "Vui lòng nhập email, mật khẩu", Toast.LENGTH_SHORT).show();
                 }else{
-                    compositeDisposable.add(apiServer.login(email_tr,pass_str)
+                    compositeDisposable.add(apiServer.login(loginRequest)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(
@@ -145,17 +140,18 @@ public class LoginActivity extends AppCompatActivity {
 
                                         UserResponse userResponse = userModel;
                                         if(userResponse.getSuccess()){
-                                            UserUtil.setEmail(userResponse.getData().getUser().getEmail());
-                                            UserUtil.setUserName(userResponse.getData().getUser().getUserName());
-                                            UserUtil.setHoTen(userResponse.getData().getUser().getHoTen());
-                                            UserUtil.setPassword(userResponse.getData().getUser().getPassword());
-                                            UserUtil.setId((int) userResponse.getData().getUser().getid());
+                                            UserUtil.setEmail(userResponse.getData().getEmail());
+                                            UserUtil.setUserName(userResponse.getData().getUserName());
+                                            UserUtil.setHoTen(userResponse.getData().getHoTen());
+                                            UserUtil.setPassword(userResponse.getData().getPassword());
+                                            UserUtil.setId((int) userResponse.getData().getid());
                                             Intent intent = new Intent(LoginActivity.this,ConnectFriendsActivity.class);
                                             startActivity(intent);
                                             Toast.makeText(this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
                                         }
                                     },
                                     throwable -> {
+                                        Log.e("BUG",throwable.getMessage());
                                         Toast.makeText(getApplicationContext(),throwable.getMessage(), Toast.LENGTH_LONG).show();
                                     }
                             ));

@@ -6,12 +6,12 @@ package com.example.pulopo.model.response;
 import java.util.List;
 
 public class RegisterReponse {
-    private DataLogin data;
+    private DataLoginUser data;
     private boolean success;
     private String message;
 
-    public DataLogin getData() { return data; }
-    public void setData(DataLogin value) { this.data = value; }
+    public DataLoginUser getData() { return data; }
+    public void setData(DataLoginUser value) { this.data = value; }
 
     public boolean getSuccess() { return success; }
     public void setSuccess(boolean value) { this.success = value; }
