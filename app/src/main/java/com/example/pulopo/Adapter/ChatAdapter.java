@@ -37,7 +37,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             view = LayoutInflater.from(context).inflate(R.layout.item_send_mess,parent,false);
             return new SendMessViewHolder(view);
 
-
         }else{
             view = LayoutInflater.from(context).inflate(R.layout.item_received,parent,false);
             return new ReceviedViewHolder(view);
@@ -69,8 +68,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }else{
             return TYPE_RECEIVE;
         }
+    }
 
-
+    public void clearData() {
+       chatMessageList.clear();
     }
 
     class SendMessViewHolder extends RecyclerView.ViewHolder{

@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -23,9 +24,7 @@ import com.example.pulopo.Retrofit.RetrofitClient;
 import com.example.pulopo.Utils.UserUtil;
 import com.example.pulopo.Utils.UtilsCommon;
 import com.example.pulopo.model.ChatMessage;
-import com.example.pulopo.model.User;
 import com.example.pulopo.model.response.ChatByUserResponse;
-import com.example.pulopo.model.response.ListChatUser;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -33,10 +32,11 @@ import org.json.JSONObject;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -58,11 +58,12 @@ public class ChatActivity extends AppCompatActivity {
     ImageView imgSend;
     EditText edtMess;
     ChatAdapter adapter;
-    List<ChatMessage> list;
+    List<ChatMessage> list = new ArrayList<>();
+    static List<ChatMessage> listprevious = new ArrayList<>();
     ApiServer apiServer;
     CompositeDisposable compositeDisposable = new CompositeDisposable();
-    String inputGpt ="";
-    static String textRs ="";
+    String inputGpt = "";
+    static String textRs = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,13 +71,27 @@ public class ChatActivity extends AppCompatActivity {
         setContentView(R.layout.activity_chat);
         iduser = getIntent().getIntExtra("id", 0);//id nguoi nhan
         username = getIntent().getStringExtra("username");
-        apiServer = RetrofitClient.getInstance(UtilsCommon.BASE_URL).create(ApiServer.class);
         initView();
         initToolbar();
-        initControl();
-        listenMess();
-    }
+        apiServer = RetrofitClient.getInstance(UtilsCommon.BASE_URL).create(ApiServer.class);
 
+        initControl();
+
+        Handler handler = new Handler();
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                // Đoạn code bạn muốn lặp lại ở đây
+                adapter.clearData();
+                listenMess();
+                // Lặp lại đoạn code sau một khoảng thời gian xác định (ví dụ: 1 giây)
+                handler.postDelayed(this, 6000);
+            }
+        };
+
+// Khởi chạy đoạn code lần đầu tiên
+        handler.post(runnable);
+    }
 
     private void initControl() {
         imgSend.setOnClickListener(new View.OnClickListener() {
@@ -90,9 +105,6 @@ public class ChatActivity extends AppCompatActivity {
     private void sendMessToServer() {
         String str_mess = edtMess.getText().toString().trim();
         inputGpt = str_mess;
-        if (iduser == 1) {
-            gptSendMess();
-        }
         if (TextUtils.isEmpty(str_mess)) {
 
         } else {
@@ -110,14 +122,17 @@ public class ChatActivity extends AppCompatActivity {
                             }
                     ));
             edtMess.setText("");
+            if (iduser == 1) {
+                gptSendMess();
+            }
         }
     }
 
     private void listenMess() {
         //connect api chuyen ve list<ChatMess>
+
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         int count = list.size();
-        Log.e("infor", UserUtil.getId() + " " + iduser);
         compositeDisposable.add(apiServer.getChatByUser(UserUtil.getId(), iduser, 1)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -136,19 +151,21 @@ public class ChatActivity extends AppCompatActivity {
                                     chatMessage.datetime = formatDate(date);
                                 }
                                 list.add(chatMessage);
-                                Log.e("listchat", list.toString());
+
+
                             }
 
                         },
                         throwable -> {
-                            Log.e("listchatbug", throwable.getMessage());
+
                             Toast.makeText(getApplicationContext(), throwable.getMessage(), Toast.LENGTH_LONG).show();
                         }
                 ));
 
-        if (count == 0) {
+        if (count==0) {
             adapter.notifyDataSetChanged();
-        } else {
+
+        }else {
             adapter.notifyItemRangeChanged(list.size(), list.size());
             recyclerView.smoothScrollToPosition(list.size() - 1);
         }
@@ -169,9 +186,9 @@ public class ChatActivity extends AppCompatActivity {
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(true);
-
         adapter = new ChatAdapter(getApplicationContext(), list, String.valueOf(UserUtil.getId()));
         recyclerView.setAdapter(adapter);
+
     }
 
     private void initToolbar() {
@@ -179,10 +196,10 @@ public class ChatActivity extends AppCompatActivity {
         toolbar.setTitle(username);
     }
 
-    //GPT
-    public static String contentGPt(String textPost) {
+    public String getContentGPt(String textPost) {
 
-        String apiKey = "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";
+        String text = "";
+        String apiKey = "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";
         String endpoint = "https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions";
 
         OkHttpClient client = new OkHttpClient();
@@ -195,46 +212,55 @@ public class ChatActivity extends AppCompatActivity {
 
         String requestInput = new String(inputByte, StandardCharsets.UTF_8);
         MediaType mediaType = MediaType.parse("application/json");
-        RequestBody body = RequestBody.create(mediaType, "{\"prompt\": \"" + input + "\", \"max_tokens\": 80}");
+        RequestBody body = RequestBody.create(mediaType, "{\"prompt\": \"" + input + "\", \"max_tokens\": 200}");
         Request request = new Request.Builder().url(endpoint).post(body).addHeader("Authorization", "Bearer " + apiKey)
                 .build();
 
+        CompletableFuture<String> future = new CompletableFuture<>();
 
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.execute(new Runnable() {
-                public void run() {
-                    // Thực hiện các hoạt động mạng ở đây
-                    try {
-                        Response response = client.newCall(request).execute();
-                        byte[] responseBodyBytes = response.body().bytes();
-                        String responseBody = new String(responseBodyBytes, StandardCharsets.UTF_8);
-                        JSONObject json = new JSONObject(responseBody);
-                        System.out.println(json);
-                        JSONArray choices = json.getJSONArray("choices");
-                        JSONObject choice = choices.getJSONObject(0);
-                        textRs = choice.getString("text");
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            try {
+                Response response = client.newCall(request).execute();
+                byte[] responseBodyBytes = response.body().bytes();
+                String responseBody = new String(responseBodyBytes, StandardCharsets.UTF_8);
+                JSONObject json = new JSONObject(responseBody);
+                System.out.println(json);
+                JSONArray choices = json.getJSONArray("choices");
+                JSONObject choice = choices.getJSONObject(0);
+                textRs = choice.getString("text");
+                future.complete(textRs);
+            } catch (Exception e) {
+                e.printStackTrace();
+                future.completeExceptionally(e);
+            }
+        });
 
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-
-        return textRs;
+        try {
+            return future.get(); // This will block until the future is complete
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
-    public void gptSendMess(){
-        Log.e("GPT",inputGpt);
-        compositeDisposable.add(apiServer.sendMessChat(1, UserUtil.getId(), contentGPt(inputGpt), 0)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        userModel -> {
-                            Toast.makeText(getApplicationContext(), "Đã gửi tin nhắn", Toast.LENGTH_LONG).show();
-                        },
-                        throwable -> {
-                            Toast.makeText(getApplicationContext(), throwable.getMessage(), Toast.LENGTH_LONG).show();
-                        }
-                ));
+    public void gptSendMess() {
+        Log.e("GPT", inputGpt);
+        CompletableFuture.runAsync(() -> {
+            String gptResponse = getContentGPt(inputGpt);
+            // Use the GPT response as needed
+            // Example: Send the GPT response to the server
+            compositeDisposable.add(apiServer.sendMessChat(1, UserUtil.getId(), gptResponse, 0)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            userModel -> {
+                                Toast.makeText(getApplicationContext(), "Đã gửi tin nhắn", Toast.LENGTH_LONG).show();
+                            },
+                            throwable -> {
+                                Toast.makeText(getApplicationContext(), throwable.getMessage(), Toast.LENGTH_LONG).show();
+                            }
+                    ));
+        });
     }
 }

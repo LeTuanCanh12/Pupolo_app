@@ -41,6 +41,7 @@ public class Post_Location_Service extends Service {
 //                Users users = new Users(UserUtil.UID.toString().trim(),UserUtil.userName.toString().trim(),myLatLocation,myLongLocation);
 //                myRef.child(users.getUID()).setValue(users);
 //                mHandler.postDelayed(this, 1000);
+
             }
         }, 1000);
         return START_NOT_STICKY;

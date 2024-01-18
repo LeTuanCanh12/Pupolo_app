@@ -68,7 +68,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.MyViewHolder> 
 
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
-
             txtUser = itemView.findViewById(R.id.username);
             itemView.setOnClickListener(this);
         }
