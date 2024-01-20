@@ -7,8 +7,16 @@ public class UserUtil {
     public static String password = "";
     public static String hoTen = "";
     public static String email = "";
-
+    public static String senderImg = "";
     public UserUtil() {
+    }
+
+    public static String getSenderImg() {
+        return senderImg;
+    }
+
+    public static void setSenderImg(String senderImg) {
+        UserUtil.senderImg = senderImg;
     }
 
     public static int getId() {

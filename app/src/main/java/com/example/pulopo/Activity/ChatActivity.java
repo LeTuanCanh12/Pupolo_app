@@ -5,9 +5,12 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -21,10 +24,15 @@ import com.example.pulopo.Adapter.UserAdapter;
 import com.example.pulopo.R;
 import com.example.pulopo.Retrofit.ApiServer;
 import com.example.pulopo.Retrofit.RetrofitClient;
+import com.example.pulopo.Services.Post_Location_Service;
+import com.example.pulopo.Utils.LocationUtil;
 import com.example.pulopo.Utils.UserUtil;
 import com.example.pulopo.Utils.UtilsCommon;
 import com.example.pulopo.model.ChatMessage;
 import com.example.pulopo.model.response.ChatByUserResponse;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -55,15 +63,18 @@ public class ChatActivity extends AppCompatActivity {
     int iduser;
     String username;
     RecyclerView recyclerView;
-    ImageView imgSend;
+    ImageView imgSend, imgLocation;
     EditText edtMess;
     ChatAdapter adapter;
+
     List<ChatMessage> list = new ArrayList<>();
-    static List<ChatMessage> listprevious = new ArrayList<>();
     ApiServer apiServer;
     CompositeDisposable compositeDisposable = new CompositeDisposable();
     String inputGpt = "";
     static String textRs = "";
+    private static final int PICK_IMAGE_REQUEST = 1;
+    StorageReference storageReference;
+    ImageView uploadFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,23 +85,12 @@ public class ChatActivity extends AppCompatActivity {
         initView();
         initToolbar();
         apiServer = RetrofitClient.getInstance(UtilsCommon.BASE_URL).create(ApiServer.class);
-
         initControl();
-
-        Handler handler = new Handler();
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                // Đoạn code bạn muốn lặp lại ở đây
-                adapter.clearData();
-                listenMess();
-                // Lặp lại đoạn code sau một khoảng thời gian xác định (ví dụ: 1 giây)
-                handler.postDelayed(this, 6000);
-            }
-        };
+        storageReference = FirebaseStorage.getInstance().getReference();
+        listenMess();
 
 // Khởi chạy đoạn code lần đầu tiên
-        handler.post(runnable);
+
     }
 
     private void initControl() {
@@ -100,6 +100,16 @@ public class ChatActivity extends AppCompatActivity {
                 sendMessToServer();
             }
         });
+        imgLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ChatActivity.this, MapsActivity.class);
+                LocationUtil.setSenderId(UserUtil.getId());
+                LocationUtil.setReciverId(iduser);
+                startActivity(intent);
+            }
+        });
+
     }
 
     private void sendMessToServer() {
@@ -132,43 +142,72 @@ public class ChatActivity extends AppCompatActivity {
         //connect api chuyen ve list<ChatMess>
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        int count = list.size();
-        compositeDisposable.add(apiServer.getChatByUser(UserUtil.getId(), iduser, 1)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        userModel -> {
-                            ChatByUserResponse chatByUserResponse;
-                            chatByUserResponse = userModel;
-                            for (int i = chatByUserResponse.getData().size() - 1; i >= 0; i--) {
-                                ChatMessage chatMessage = new ChatMessage();
-                                chatMessage.sendid = String.valueOf(chatByUserResponse.getData().get(i).getSenderId());
-                                chatMessage.receivedid = String.valueOf(chatByUserResponse.getData().get(i).getReceiverId());
-                                chatMessage.mess = chatByUserResponse.getData().get(i).getMessage();
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    Date date = dateFormat.parse(chatByUserResponse.getData().get(i).getDateSend());
-                                    chatMessage.dateObj = date;
-                                    chatMessage.datetime = formatDate(date);
+        List<ChatMessage> listCheck = new ArrayList<>();
+        final int[] number = {0};
+        Handler handler = new Handler();
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+
+                compositeDisposable.add(apiServer.getChatByUser(UserUtil.getId(), iduser, 1)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                userModel -> {
+                                    ChatByUserResponse chatByUserResponse;
+                                    chatByUserResponse = userModel;
+                                    for (int i = chatByUserResponse.getData().size() - 1; i >= 0; i--) {
+                                        ChatMessage chatMessage = new ChatMessage();
+                                        chatMessage.sendid = String.valueOf(chatByUserResponse.getData().get(i).getSenderId());
+                                        chatMessage.receivedid = String.valueOf(chatByUserResponse.getData().get(i).getReceiverId());
+                                        chatMessage.mess = chatByUserResponse.getData().get(i).getMessage();
+                                        chatMessage.typeMess = (int) chatByUserResponse.getData().get(i).getMessageType();
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                            Date date = dateFormat.parse(chatByUserResponse.getData().get(i).getDateSend());
+                                            chatMessage.dateObj = date;
+                                            chatMessage.datetime = formatDate(date);
+                                        }
+                                        list.add(chatMessage);
+
+
+                                    }
+
+                                },
+                                throwable -> {
+                                    Toast.makeText(getApplicationContext(), throwable.getMessage(), Toast.LENGTH_LONG).show();
                                 }
-                                list.add(chatMessage);
+                        ));
+
+                // Đoạn code bạn muốn lặp lại ở đây
 
 
-                            }
+                if (number[0] >= 1) {
+                    Log.e("checklist", String.valueOf(list.size()));
+                    list.subList(0,list.size()).clear();
+                    Log.e("checklist", String.valueOf(list.size()));
+                    recyclerView.scrollToPosition(list.size());
+                }
+                adapter = new ChatAdapter(getApplicationContext(), list, String.valueOf(UserUtil.getId()));
+                recyclerView.setAdapter(adapter);
+                adapter.notifyDataSetChanged();
 
-                        },
-                        throwable -> {
+                number[0]++;
 
-                            Toast.makeText(getApplicationContext(), throwable.getMessage(), Toast.LENGTH_LONG).show();
-                        }
-                ));
+                // Lặp lại đoạn code sau một khoảng thời gian xác định (ví dụ: 1 giây)
+                handler.postDelayed(this, 10000);
+            }
+        };
+        handler.post(runnable);
 
-        if (count==0) {
-            adapter.notifyDataSetChanged();
 
-        }else {
-            adapter.notifyItemRangeChanged(list.size(), list.size());
-            recyclerView.smoothScrollToPosition(list.size() - 1);
-        }
+//        if (count==0) {
+//            adapter.notifyDataSetChanged();
+//
+//        }else {
+//            adapter.notifyItemRangeChanged(list.size(), list.size());
+//            recyclerView.smoothScrollToPosition(list.size() - 1);
+//        }
+
 
     }
 
@@ -179,15 +218,75 @@ public class ChatActivity extends AppCompatActivity {
 
 
     private void initView() {
-        list = new ArrayList<>();
+
         recyclerView = findViewById(R.id.recycleview_chat);
         imgSend = findViewById(R.id.imagechat);
+        imgLocation = findViewById(R.id.imagelocation);
         edtMess = findViewById(R.id.edtinputtext);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(true);
-        adapter = new ChatAdapter(getApplicationContext(), list, String.valueOf(UserUtil.getId()));
-        recyclerView.setAdapter(adapter);
+
+
+        uploadFile = findViewById(R.id.imagefile);
+        uploadFile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openImagePicker();
+            }
+        });
+    }
+
+    private void openImagePicker() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, PICK_IMAGE_REQUEST);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            // The user has successfully picked an image
+            Uri selectedImageUri = data.getData();
+            uploadImageToFirebase(selectedImageUri);
+        }
+    }
+
+    private void uploadImageToFirebase(Uri imageUri) {
+        // Create a reference to 'images/<FILENAME>'
+        StorageReference imageRef = storageReference.child("images/" + formatDate(new Date()));
+
+        String fileName = imageRef.getName();
+
+        // Upload the file to Firebase Storage
+        UploadTask uploadTask = imageRef.putFile(imageUri);
+
+        // Register observers to listen for when the upload is done or if it fails
+        uploadTask.addOnSuccessListener(taskSnapshot -> {
+            // Image uploaded successfully, handle the success
+            // You can get the download URL of the uploaded image from taskSnapshot.getDownloadUrl()
+            sendImageToServer(fileName);
+
+        }).addOnFailureListener(exception -> {
+            // Handle unsuccessful uploads
+            // ...
+        });
+    }
+
+    private void sendImageToServer(String path) {
+        compositeDisposable.add(apiServer.sendMessChat(UserUtil.getId(), iduser, path, 2)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        userModel -> {
+                            Toast.makeText(getApplicationContext(), "Đã gửi ảnh", Toast.LENGTH_LONG).show();
+                        },
+                        throwable -> {
+
+                            Toast.makeText(getApplicationContext(), throwable.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                ));
 
     }
 
@@ -199,7 +298,7 @@ public class ChatActivity extends AppCompatActivity {
     public String getContentGPt(String textPost) {
 
         String text = "";
-        String apiKey = "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";
+        String apiKey = "-wh8OX5OyjOvwf5Rv399ZT3BlbkFJEwpNBQYllStWP60hMv8Q";
         String endpoint = "https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions";
 
         OkHttpClient client = new OkHttpClient();

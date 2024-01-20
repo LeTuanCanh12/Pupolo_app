@@ -23,6 +23,12 @@
         <activity
             android:name=".Activity.ConnectFriendsActivity"
             android:exported="false" />
+        <activity
+            android:name=".Activity.SearchingActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.UserInfoActivity"
+            android:exported="false" />
 
         <service
             android:name=".Services.Post_Location_Service"

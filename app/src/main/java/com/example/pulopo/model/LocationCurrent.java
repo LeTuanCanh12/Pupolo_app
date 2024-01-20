@@ -1,27 +1,27 @@
 package com.example.pulopo.model;
 
 public class LocationCurrent {
-    private double Lat;
-    private double Long;
+    public static double Lat;
+    public static double Long;
 
     public LocationCurrent(double lat, double aLong) {
         Lat = lat;
         Long = aLong;
     }
 
-    public double getLat() {
+    public static double getLat() {
         return Lat;
     }
 
-    public void setLat(double lat) {
+    public static void setLat(double lat) {
         Lat = lat;
     }
 
-    public double getLong() {
+    public static double getLong() {
         return Long;
     }
 
-    public void setLong(double aLong) {
+    public static void setLong(double aLong) {
         Long = aLong;
     }
 }

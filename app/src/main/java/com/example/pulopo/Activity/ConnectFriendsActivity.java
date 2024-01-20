@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 
@@ -38,6 +39,7 @@ public class ConnectFriendsActivity extends AppCompatActivity {
     Toolbar toolbar;
     RecyclerView recyclerView;
     UserAdapter userAdapter;
+    ImageView search,infor;
     ApiServer apiServer;
     CompositeDisposable compositeDisposable = new CompositeDisposable();
 
@@ -46,10 +48,28 @@ public class ConnectFriendsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connect_friends);
         initView();
+        initEvent();
         initToolbar();
         apiServer = RetrofitClient.getInstance(UtilsCommon.BASE_URL).create(ApiServer.class);
         getUserFromFire();
 
+    }
+
+    private void initEvent() {
+        search.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ConnectFriendsActivity.this,SearchingActivity.class);
+                startActivity(intent);
+            }
+        });
+        infor.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ConnectFriendsActivity.this,UserInfoActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private void getUserFromFire() {
@@ -99,6 +119,8 @@ public class ConnectFriendsActivity extends AppCompatActivity {
     private void initView() {
         toolbar = findViewById(R.id.toolbar);
         recyclerView = findViewById(R.id.recycleview_user);
+        search = findViewById(R.id.imgsearch);
+        infor = findViewById(R.id.imgeditprofile);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(true);

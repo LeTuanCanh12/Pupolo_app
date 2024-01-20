@@ -20,7 +20,6 @@ import com.example.pulopo.R;
 import com.example.pulopo.Retrofit.ApiServer;
 import com.example.pulopo.Retrofit.LoginRequest;
 import com.example.pulopo.Retrofit.RetrofitClient;
-import com.example.pulopo.Services.Post_Location_Service;
 import com.example.pulopo.Utils.UserUtil;
 import com.example.pulopo.Utils.UtilsCommon;
 import com.example.pulopo.model.response.UserResponse;
@@ -114,8 +113,6 @@ public class LoginActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             if(!locationManager.isLocationEnabled()){
                 Toast.makeText(this, "Vui lòng bật định vị và khởi động lại ứng dụng", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(LoginActivity.this,Post_Location_Service.class);
-            stopService(intent);
             finish();
             }
         }
