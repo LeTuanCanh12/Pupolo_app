@@ -6,7 +6,8 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -19,7 +20,8 @@
         tools:targetApi="31">
         <activity
             android:name=".Activity.ChatActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.Pulopo"/>
         <activity
             android:name=".Activity.ConnectFriendsActivity"
             android:exported="false" />
@@ -28,6 +30,9 @@
             android:exported="false" />
         <activity
             android:name=".Activity.UserInfoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.InfoActivity"
             android:exported="false" />
 
         <service

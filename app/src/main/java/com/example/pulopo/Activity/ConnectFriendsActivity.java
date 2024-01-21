@@ -66,7 +66,7 @@ public class ConnectFriendsActivity extends AppCompatActivity {
         infor.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(ConnectFriendsActivity.this,UserInfoActivity.class);
+                Intent intent = new Intent(ConnectFriendsActivity.this,InfoActivity.class);
                 startActivity(intent);
             }
         });

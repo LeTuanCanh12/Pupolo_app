@@ -20,11 +20,9 @@ import android.widget.Toast;
 
 
 import com.example.pulopo.Adapter.ChatAdapter;
-import com.example.pulopo.Adapter.UserAdapter;
 import com.example.pulopo.R;
 import com.example.pulopo.Retrofit.ApiServer;
 import com.example.pulopo.Retrofit.RetrofitClient;
-import com.example.pulopo.Services.Post_Location_Service;
 import com.example.pulopo.Utils.LocationUtil;
 import com.example.pulopo.Utils.UserUtil;
 import com.example.pulopo.Utils.UtilsCommon;
@@ -63,7 +61,7 @@ public class ChatActivity extends AppCompatActivity {
     int iduser;
     String username;
     RecyclerView recyclerView;
-    ImageView imgSend, imgLocation;
+    ImageView imgSend, imgLocation, uploadImg,attachFile;
     EditText edtMess;
     ChatAdapter adapter;
 
@@ -73,8 +71,9 @@ public class ChatActivity extends AppCompatActivity {
     String inputGpt = "";
     static String textRs = "";
     private static final int PICK_IMAGE_REQUEST = 1;
+    private static final int PICK_FILE_REQUEST = 2;
     StorageReference storageReference;
-    ImageView uploadFile;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,6 +157,7 @@ public class ChatActivity extends AppCompatActivity {
                                     chatByUserResponse = userModel;
                                     for (int i = chatByUserResponse.getData().size() - 1; i >= 0; i--) {
                                         ChatMessage chatMessage = new ChatMessage();
+                                        chatMessage.chatId = chatByUserResponse.getData().get(i).getChatId();
                                         chatMessage.sendid = String.valueOf(chatByUserResponse.getData().get(i).getSenderId());
                                         chatMessage.receivedid = String.valueOf(chatByUserResponse.getData().get(i).getReceiverId());
                                         chatMessage.mess = chatByUserResponse.getData().get(i).getMessage();
@@ -168,8 +168,6 @@ public class ChatActivity extends AppCompatActivity {
                                             chatMessage.datetime = formatDate(date);
                                         }
                                         list.add(chatMessage);
-
-
                                     }
 
                                 },
@@ -182,9 +180,9 @@ public class ChatActivity extends AppCompatActivity {
 
 
                 if (number[0] >= 1) {
-                    Log.e("checklist", String.valueOf(list.size()));
+
                     list.subList(0,list.size()).clear();
-                    Log.e("checklist", String.valueOf(list.size()));
+
                     recyclerView.scrollToPosition(list.size());
                 }
                 adapter = new ChatAdapter(getApplicationContext(), list, String.valueOf(UserUtil.getId()));
@@ -227,16 +225,55 @@ public class ChatActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(true);
 
-
-        uploadFile = findViewById(R.id.imagefile);
-        uploadFile.setOnClickListener(new View.OnClickListener() {
+        attachFile = findViewById(R.id.attachFile);
+        attachFile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openFilePicker();
+            }
+        });
+        uploadImg = findViewById(R.id.imagefile);
+        uploadImg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 openImagePicker();
             }
         });
     }
+    // attach file
+    private void openFilePicker() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        startActivityForResult(intent, PICK_FILE_REQUEST);
+        Log.e("sendFile","run");
+    }
+    private void uploadFileToFirebase(Uri fileUri) {
+        StorageReference fileRef = storageReference.child("files/" + "pulopo_file_" + formatDate(new Date()));
+        String fileName = fileRef.getName();
+        UploadTask uploadTask = fileRef.putFile(fileUri);
+        uploadTask.addOnSuccessListener(taskSnapshot -> {
+            sendFileToServer(fileName);
+            Log.e("sendFile","up firebase");
+        }).addOnFailureListener(exception -> {
+        });
+    }
 
+    private void sendFileToServer(String fileName){
+        compositeDisposable.add(apiServer.sendMessChat(UserUtil.getId(), iduser, fileName, 3)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        userModel -> {
+                            Log.e("sendFile","up sv");
+                            Toast.makeText(getApplicationContext(), "Đã gửi tập tin", Toast.LENGTH_LONG).show();
+                        },
+                        throwable -> {
+
+                            Toast.makeText(getApplicationContext(), throwable.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                ));
+    }
+    //Image upload
     private void openImagePicker() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, PICK_IMAGE_REQUEST);
@@ -251,7 +288,17 @@ public class ChatActivity extends AppCompatActivity {
             Uri selectedImageUri = data.getData();
             uploadImageToFirebase(selectedImageUri);
         }
+        if (requestCode == PICK_FILE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            // The user has successfully picked an file
+
+            Uri selectedFileUri = data.getData();
+            uploadFileToFirebase(selectedFileUri);
+            Log.e("sendFile","rs");
+        }
+
     }
+
+
 
     private void uploadImageToFirebase(Uri imageUri) {
         // Create a reference to 'images/<FILENAME>'

@@ -14,6 +14,7 @@ import com.google.gson.annotations.SerializedName;
 import io.reactivex.rxjava3.core.Observable;
 
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
@@ -53,5 +54,8 @@ public interface ApiServer {
                                             @Query("HoTen") String hoTen,
                                             @Query("Email") String email
                                             );
-
+    @DELETE("ChatInfo")
+    Observable<UserResponse> delete(@Query("id") String chatId);
+    @DELETE("User")
+    Observable<UserResponse> deleteAccount(@Query("username") String userName);
 }

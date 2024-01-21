@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Activity.InfoActivity">
+
+    <GridLayout
+        android:id="@+id/layout_info"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:columnCount="2"
+        android:paddingLeft="15dp"
+        android:paddingTop="30dp"
+        android:paddingRight="15dp"
+        android:rowCount="10"
+        android:weightSum="10"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_info">
+
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="40dp"
+            android:text="Username"
+            android:textSize="17dp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/info_name"
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="7"
+            android:height="48dp"
+            android:background="@drawable/back_inputtext"
+            android:editable="false"
+            android:paddingLeft="10dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            tools:ignore="Deprecated" />
+
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="40dp"
+            android:text="Email"
+            android:textSize="17dp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/info_email"
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="7"
+            android:height="48dp"
+            android:background="@drawable/back_inputtext"
+            android:editable="false"
+            android:paddingLeft="10dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            tools:ignore="Deprecated" />
+
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="40dp"
+            android:text="Họ tên"
+            android:textSize="17dp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/info_fullname"
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="7"
+            android:height="48dp"
+            android:background="@drawable/back_inputtext"
+            android:editable="false"
+            android:paddingLeft="10dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            tools:ignore="Deprecated" />
+
+
+        <Button
+            android:id="@+id/btn_update"
+            style="@style/btn"
+            android:layout_width="210dp"
+            android:layout_height="wrap_content"
+            android:layout_row="5"
+            android:layout_column="1"
+            android:layout_marginLeft="0dp"
+            android:layout_marginTop="50dp"
+            android:text="Cập nhật thông tin" />
+
+        <Button
+            android:id="@+id/btn_logout"
+            style="@style/btn"
+            android:layout_width="170dp"
+            android:layout_height="wrap_content"
+            android:layout_row="8"
+            android:layout_column="1"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="50dp"
+            android:text="Đăng xuất" />
+
+        <Button
+            android:id="@+id/btn_delete"
+            style="@style/delete_btn"
+            android:layout_width="170dp"
+            android:layout_height="wrap_content"
+            android:layout_row="9"
+            android:layout_column="1"
+            android:layout_marginLeft="20dp"
+            android:layout_marginBottom="30dp"
+            android:text="Xóa tài khoản" />
+    </GridLayout>
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_info"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="#8BC34A"
+        app:title="Thông tin cá nhân"
+        app:titleTextColor="@color/white" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

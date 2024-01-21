@@ -18,12 +18,19 @@
         android:layout_height="wrap_content">
 
         <ImageView
-            android:id="@+id/imagefile"
-            android:layout_width="4dp"
+            android:id="@+id/attachFile"
+            android:layout_width="1dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
             android:src="@drawable/baseline_attach_file_24" />
+        <ImageView
+            android:id="@+id/imagefile"
+            android:layout_width="1dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:src="@drawable/baseline_image_24" />
 
         <ImageView
             android:id="@+id/imagelocation"
@@ -35,9 +42,9 @@
 
         <EditText
             android:id="@+id/edtinputtext"
-            android:layout_width="36dp"
+            android:layout_width="10dp"
             android:layout_height="wrap_content"
-            android:layout_weight="7"
+            android:layout_weight="6"
             android:height="48dp"
             android:background="@drawable/back_inputtext"
             android:hint="Messing..."

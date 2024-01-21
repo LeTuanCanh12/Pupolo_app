@@ -3,6 +3,7 @@ package com.example.pulopo.model;
 import java.util.Date;
 
 public class ChatMessage {
+    public String chatId;
     public String sendid, receivedid, mess, datetime;
     public Date dateObj;
     public int typeMess;
